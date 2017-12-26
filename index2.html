@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Audio Visualizer based on Three.js</title>
+  <link href="https://fonts.googleapis.com/css?family=Saira" rel="stylesheet">
+      <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div id="content">
+        <label for="thefile" class="file"> Choose an audio file
+            <input type="file" id="thefile" accept="audio/*" />
+        </label>
+    <audio id="audio"></audio>
+    <div id="out"></div>
+    </div>
+
+
+<script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js'></script>
+<script src='https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/controls/OrbitControls.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.3/dat.gui.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.3.0/simplex-noise.min.js'></script>
+<script src="js/three.js"></script>
+
+<script>
+//initialise simplex noise (replace with perlin noise in future if needed)
+var noise = new SimplexNoise();
+
+
+var vizInit = function (){
+  
+  var file = document.getElementById("thefile");
+  var audio = document.getElementById("audio");
+  var filelabel = document.querySelector("label.file");
+  var toDrag = [];
+  
+  //audio file upload event
+
+    file.onchange = function() {
+        audio.src = URL.createObjectURL(this.files[0]);
+        audio.load();
+        audio.play();
+    }
+    filelabel.classList.add('normal');
+    audio.classList.add('active');
+    var files = this.files;
+    audio.src = "./audio/audio01.mp3";
+    audio.load();
+    audio.play();
+    var context = new AudioContext();
+    var src = context.createMediaElementSource(audio);
+    var analyser = context.createAnalyser();
+    src.connect(analyser);
+    analyser.connect(context.destination);
+    analyser.fftSize = 512;
+    var bufferLength = analyser.frequencyBinCount;
+    var dataArray = new Uint8Array(bufferLength);
+
+
+    //webgl
+    var scene = new THREE.Scene();
+    var group = new THREE.Group();
+    var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0,0,100);
+    camera.lookAt(scene.position);
+    scene.add(camera);
+
+    //material
+    material = new THREE.MeshNormalMaterial(  );
+
+    //render
+
+    var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    var orbitControls = new THREE.OrbitControls(camera);
+    orbitControls.autoRotate = true;
+
+    //plane
+    var planeGeometry = new THREE.PlaneGeometry(1200, 1200, 10, 10);
+    var planeMaterial = new THREE.MeshNormalMaterial({
+        color: 0xd3ff8e,
+        side: THREE.DoubleSide
+    });
+
+    
+    //bottom
+    var plane2 = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane2.rotation.x = -0.5 * Math.PI;
+    plane2.position.set(0, -60, 0);
+    group.add(plane2);
+
+
+
+    //object
+
+    //1
+    var geometry1 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, overdraw: 0.5 } );
+    var ball1 = new THREE.Mesh(geometry1, lambertMaterial);
+    ball1.position.set(0, 0, 0);
+    ball1.name = "ball1";
+    group.add(ball1);
+    toDrag.push(ball1);
+
+
+
+
+    //2
+    var geometry2 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0x787AFF, overdraw: 0.5 } );
+    var ball2 = new THREE.Mesh(geometry2, lambertMaterial);
+    ball2.position.set(80, 0, 0);
+    group.add(ball2);
+    ball2.name = "ball2";
+    toDrag.push(ball2);    
+
+
+    //3
+
+    var geometry3 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0x7aff78, overdraw: 0.5 } );
+    var ball3 = new THREE.Mesh(geometry3, lambertMaterial);
+    ball3.position.set(50, 70, 50);
+    group.add(ball3);
+    ball3.name = "ball3";
+    toDrag.push(ball3);
+
+
+    //4
+
+    var geometry4 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xFFEB3B, overdraw: 0.5 } );
+    var ball4 = new THREE.Mesh(geometry4, lambertMaterial);
+    ball4.position.set(-200, 20, 100);
+    group.add(ball4);
+    ball4.name = "ball4";
+    toDrag.push(ball4);
+
+    //5
+
+    var geometry5 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0x78ffba, overdraw: 0.5 } );
+    var ball5 = new THREE.Mesh(geometry5, lambertMaterial);
+    ball5.position.set(-100, 10, 20);
+    group.add(ball5);
+    ball5.name = "ball5";
+    toDrag.push(ball5);
+
+
+    //6
+
+    var geometry6 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xFFFD78, overdraw: 0.5 } );
+    var ball6 = new THREE.Mesh(geometry6, lambertMaterial);
+    ball6.position.set(-100, 100, -40);
+    group.add(ball6);
+    ball6.name = "ball6";
+    toDrag.push(ball6);
+
+    //7
+
+    var geometry7 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xFFBA78, overdraw: 0.5 } );
+    var ball7 = new THREE.Mesh(geometry7, lambertMaterial);
+    ball7.position.set(30, -10, -100);
+    group.add(ball7);
+    ball7.name = "ball7";
+    toDrag.push(ball7);
+
+    //8
+
+    var geometry8 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xFFEB3B, overdraw: 0.5 } );
+    var ball8 = new THREE.Mesh(geometry8, lambertMaterial);
+    ball8.position.set(60, 180, -50);
+    group.add(ball8);
+    ball8.name = "ball8";
+    toDrag.push(ball8);
+
+    //9
+
+    var geometry9 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xf6546a, overdraw: 0.5 } );
+    var ball9 = new THREE.Mesh(geometry9, lambertMaterial);
+    ball9.position.set(60, 140, -100);
+    group.add(ball9);
+    ball9.name = "ball9";
+    toDrag.push(ball9);
+
+    //10
+
+    var geometry10 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0x787AFF, overdraw: 0.5 } );
+    var ball10 = new THREE.Mesh(geometry10, lambertMaterial);
+    ball10.position.set(160, 120, 70);
+    group.add(ball10);
+    ball10.name = "ball10";
+    toDrag.push(ball10);
+
+
+    //11
+
+    var geometry11 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xFF663F, overdraw: 0.5 } );
+    var ball11 = new THREE.Mesh(geometry11, lambertMaterial);
+    ball11.position.set(-250, 20, -120);
+    group.add(ball9);
+    ball11.name = "ball11";
+    toDrag.push(ball11);
+
+    //12
+
+    var geometry12 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xFFEB3B, overdraw: 0.5 } );
+    var ball12 = new THREE.Mesh(geometry12, lambertMaterial);
+    ball12.position.set(200, 30, 0);
+    group.add(ball12);
+    ball12.name = "ball12";
+    toDrag.push(ball12);
+
+    //13
+
+    var geometry13 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0x00563F, overdraw: 0.5 } );
+    var ball13 = new THREE.Mesh(geometry13, lambertMaterial);
+    ball13.position.set(160, 20, -70);
+    group.add(ball13);
+    ball13.name = "ball13";
+    toDrag.push(ball13);
+
+    //14
+
+    var geometry14 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xea9f9f, overdraw: 0.5 } );
+    var ball14 = new THREE.Mesh(geometry14, lambertMaterial);
+    ball14.position.set(0, 0, 80);
+    group.add(ball14);
+    ball14.name = "ball14";
+    toDrag.push(ball14);
+    
+    //15
+
+    var geometry15 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xD64040, overdraw: 0.5 } );
+    var ball15 = new THREE.Mesh(geometry15, lambertMaterial);
+    ball15.position.set(100, 30, -80);
+    group.add(ball15);
+    ball15.name = "ball15";
+    toDrag.push(ball15);
+
+    //16
+
+    var geometry16 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0x6495ed, overdraw: 0.5 } );
+    var ball16 = new THREE.Mesh(geometry16, lambertMaterial);
+    ball16.position.set(120, 70, 0);
+    group.add(ball16);
+    ball16.name = "ball16";
+    toDrag.push(ball16);
+
+    //17
+
+    var geometry17 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xffff4c, overdraw: 0.5 } );
+    var ball17 = new THREE.Mesh(geometry17, lambertMaterial);
+    ball17.position.set(-120, 70, 10);
+    group.add(ball17);
+    ball17.name = "ball17";
+    toDrag.push(ball17);
+
+    //18
+
+    var geometry18 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xf6546a, overdraw: 0.5 } );
+    var ball18 = new THREE.Mesh(geometry18, lambertMaterial);
+    ball18.position.set(0, 0, -80);
+    group.add(ball18);
+    ball18.name = "ball18";
+
+    //19
+
+    var geometry19 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xcc33ff, overdraw: 0.5 } );
+    var ball19 = new THREE.Mesh(geometry19, lambertMaterial);
+    ball19.position.set(-160, 120, -250);
+    group.add(ball17);
+    ball19.name = "ball19";
+
+    //20
+
+    var geometry20 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0x7FFFD4, overdraw: 0.5 } );
+    var ball20 = new THREE.Mesh(geometry20, lambertMaterial);
+    ball20.position.set(-120, 140, 10);
+    group.add(ball20);
+    ball20.name = "ball20";
+
+    //21
+
+    var geometry21 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xAA20B2, overdraw: 0.5 } );
+    var ball21 = new THREE.Mesh(geometry21, lambertMaterial);
+    ball21.position.set(-60, 120, 10);
+    group.add(ball21);
+    ball21.name = "ball21";
+    toDrag.push(ball21);
+
+    //22
+
+    var geometry22 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0x20B2AA, overdraw: 0.5 } );
+    var ball22 = new THREE.Mesh(geometry22, lambertMaterial);
+    ball22.position.set(60, 100, 50);
+    group.add(ball17);
+    ball22.name = "ball22";
+    toDrag.push(ball22);
+
+    //23
+
+    var geometry23 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xf6546a, overdraw: 0.5 } );
+    var ball23 = new THREE.Mesh(geometry23, lambertMaterial);
+    ball23.position.set(50, 30, -200);
+    group.add(ball23);
+    ball23.name = "ball23";
+
+    //24
+
+    var geometry24 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, overdraw: 0.5 } );
+    var ball24 = new THREE.Mesh(geometry24, lambertMaterial);
+    ball24.position.set(-50, 30, 200);
+    group.add(ball24);
+    ball24.name = "ball24";
+
+    //25
+
+    var geometry25 = new THREE.IcosahedronGeometry(10, 4);
+    var lambertMaterial = new THREE.MeshLambertMaterial( { color: 0x7aff78, overdraw: 0.5 } );
+    var ball25 = new THREE.Mesh(geometry25, lambertMaterial);
+    ball25.position.set(100, 70, 150);
+    group.add(ball25);
+    ball25.name = "ball25";
+    toDrag.push(ball25);
+
+
+
+    //light
+
+    var ambientLight = new THREE.AmbientLight(0xFFFFFF);
+    ambientLight.position.set(-4, -2, 1).normalize();
+    scene.add(ambientLight);
+
+    var spotLight = new THREE.SpotLight(0xFFFFFF);
+    spotLight.intensity = 0.9;
+    spotLight.position.set(-10, 40, 20);
+    spotLight.lookAt(ball1);
+    spotLight.castShadow = true;
+    scene.add(spotLight);
+
+
+    
+
+    // var gui = new dat.GUI();
+    var guiControls = new function () {
+        this.amp = 1.8;
+            }();
+      
+    // gui.add(guiControls, 'amp', 0, ball1.geometry.parameters.radius - 1);
+    // gui.add(guiControls, 'wireframe').onChange(function (e) {
+    //     ball1.material.wireframe = e;
+    // });
+    
+    scene.add(group);
+
+    document.getElementById('out').appendChild(renderer.domElement);
+
+    render();
+
+    function render() {
+        analyser.getByteFrequencyData(dataArray);
+
+        var lowerHalfArray = dataArray.slice(0, (dataArray.length/2) - 1);
+        var upperHalfArray = dataArray.slice((dataArray.length/2) - 1, dataArray.length - 1);
+
+        var overallAvg = avg(dataArray);
+        var lowerMax = max(lowerHalfArray);
+        var lowerAvg = avg(lowerHalfArray);
+        var upperMax = max(upperHalfArray);
+        var upperAvg = avg(upperHalfArray);
+
+        var lowerMaxFr = lowerMax / lowerHalfArray.length;
+        var lowerAvgFr = lowerAvg / lowerHalfArray.length;
+        var upperMaxFr = upperMax / upperHalfArray.length;
+        var upperAvgFr = upperAvg / upperHalfArray.length;
+        
+        // ball.rotation.y += 0.008;
+        // ball.rotation.x += 0.009;
+
+        makeRoughGround(plane2, modulate(lowerMaxFr, 0, 1, 0.5, 4));
+        makeRoughBall(ball1, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball2, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball3, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball4, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball5, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball6, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball7, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball8, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball9, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball10, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball11, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball12, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball13, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball14, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball15, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball16, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball17, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball18, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball19, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball20, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball21, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+
+        makeRoughBall(ball22, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball23, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball24, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        makeRoughBall(ball25, modulate(Math.pow(lowerMaxFr, 0.5), 0, 1, 0, 8), modulate(upperAvgFr, 0, 1, 0, 4));
+        
+        group.rotation.y += 0.005;
+        renderer.render(scene, camera);
+        requestAnimationFrame(render);
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+
+
+    function makeRoughBall(mesh, bassFr, treFr) {
+        mesh.geometry.vertices.forEach(function (vertex, i) {
+            var offset = mesh.geometry.parameters.radius;
+            var amp = guiControls.amp;
+            var time = Date.now();
+            vertex.normalize();
+            var distance = (offset + bassFr ) + noise.noise3D(vertex.x + time * 0.00007, vertex.y +  time * 0.00008, vertex.z +  time * 0.00009) * amp * treFr;
+            vertex.multiplyScalar(distance);
+        });
+        mesh.geometry.verticesNeedUpdate = true;
+        mesh.geometry.normalsNeedUpdate = true;
+        mesh.geometry.computeVertexNormals();
+        mesh.geometry.computeFaceNormals();
+    }
+
+
+
+
+
+    function makeRoughGround(mesh, distortionFr) {
+        mesh.geometry.vertices.forEach(function (vertex, i) {
+            var amp = 2;
+            var time = Date.now();
+            var distance = (noise.noise2D(vertex.x + time * 0.0003, vertex.y + time * 0.0001) + 0) * distortionFr * amp;
+            vertex.z = distance;
+        });
+        mesh.geometry.verticesNeedUpdate = true;
+        mesh.geometry.normalsNeedUpdate = true;
+        mesh.geometry.computeVertexNormals();
+        mesh.geometry.computeFaceNormals();
+    }
+
+    audio.play();
+  //};
+}
+
+window.onload = vizInit();
+
+document.body.addEventListener('touchend', function(ev) { context.resume(); });
+
+//some helper functions here
+function fractionate(val, minVal, maxVal) {
+    return (val - minVal)/(maxVal - minVal);
+}
+
+function modulate(val, minVal, maxVal, outMin, outMax) {
+    var fr = fractionate(val, minVal, maxVal);
+    var delta = outMax - outMin;
+    return outMin + (fr * delta);
+}
+
+function avg(arr){
+    var total = arr.reduce(function(sum, b) { return sum + b; });
+    return (total / arr.length);
+}
+
+function max(arr){
+    return arr.reduce(function(a, b){ return Math.max(a, b); })
+}
+
+// todos
+// customize the audio controls
+// provide mic input support
+// change the background color based on the audio
+// display song name inside the vizualization
+// implement the same with Perlin noise
+
+
+
+</script>
+</body>
+</html
